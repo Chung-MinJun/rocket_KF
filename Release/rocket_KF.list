@@ -1,5 +1,5 @@
 
-rocket.elf:     file format elf32-littlearm
+rocket_KF.elf:     file format elf32-littlearm
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
