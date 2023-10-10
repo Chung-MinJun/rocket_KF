@@ -298,11 +298,9 @@ int main(void)
   est_state_thea_z[0][0][0] = myGyroScaled.z;
   est_cov_thea_z[0][0][0] = R_mat_gyro[0][0];
 
-  printf("test_Pass\n");
   //=========need Kalman Gain and COV of estimation       R, F, H / Q : made in KF algorithm
-  //  [ acc; vel; pos ]
+
   float** R_mat = Matrix_gen_2dim(row_1, col_1);
-  printf("%.2f",R_mat[0][0]);
   float** H_vec = Matrix_gen_2dim(row_1, col_2);
   float** F_vec = Matrix_gen_2dim(row_2, col_2);
   R_mat[0][0] = 0.0144;
@@ -337,7 +335,7 @@ int main(void)
   float*** est_state_z = Matrix_gen(row_3, col_1, iter_mem);
   float*** est_cov_z = Matrix_gen(row_2, col_2, iter_mem);     //for detecting location(scalar KF)
   float* est_cov_z_for_pos = (float*)malloc(iter_mem*sizeof(float));      //cov for scalar KF
-
+  memset(est_cov_z_for_pos, 0, iter_mem * sizeof(float)); // before use malloc, init value!
   //init call sensing values
 
   // mpu6050 part
@@ -449,6 +447,7 @@ int main(void)
    KF_return KF_rho_x_vel_ang;
    float sigma_w_rho_x = measu_Ang_acc_x[iter_temp][0][0] - measu_Ang_acc_x[iter_temp - 1][0][0];
    KF_rho_x_vel_ang = KF_alg(F_vec_gyro, H_vec_gyro, R_mat_gyro, est_state_rho_x[iter_temp - 1], est_cov_rho_x[iter_temp - 1], measu_Ang_acc_x[iter_temp], sigma_w_rho_x, del_t);
+
    est_state_rho_x[iter_temp][0][0] = KF_rho_x_vel_ang.estimate_state[0][0];
    est_state_rho_x[iter_temp][1][0] = KF_rho_x_vel_ang.estimate_state[1][0];
 
@@ -1348,6 +1347,7 @@ float** Matrix_multiplicator(float** matrix_1, float** matrix_2,int r1, int c1, 
 //function for KF axis acceleration.
 KF_return KF_alg(float** F, float** H, float** R, float** esti_state_prev, float** esti_cov_prev, float** measu_state, float sigma_w, float del_t) {
     KF_return KF;
+    //printf("pass\n");
     KF.estimate_cov = Matrix_gen_2dim(row_2, col_2);
     KF.estimate_state = Matrix_gen_2dim(row_2, col_1);
     KF.Kalman_Gain = Matrix_gen_2dim(row_2, col_1);
@@ -1368,7 +1368,8 @@ KF_return KF_alg(float** F, float** H, float** R, float** esti_state_prev, float
     float** innov_Kal = Matrix_gen_2dim(row_2, col_1);
 
     float** renewal_cov_1 = Matrix_gen_2dim(row_2, col_2);
-
+   	if(renewal_cov_1==NULL)
+   	{printf("overflow\n");} // over flow here 1006 test
 
     //predict state
     predict_state = Matrix_multiplicator(F, esti_state_prev, row_2, col_2, row_2, col_1);
